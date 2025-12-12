@@ -445,7 +445,7 @@ function App() {
               })),
               date: new Date().toISOString()
             };
-            fetch('http://localhost:4000/commandes', {
+            fetch('https://site-maillot-backedn.onrender.com/commandes', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(commande),

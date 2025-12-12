@@ -297,8 +297,8 @@ function App() {
 
           {/* Modal panier stylé */}
           {isCartOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xl">
-              <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 relative">
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xl">
+              <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 relative mx-4 my-6 sm:mx-0" style={{ maxHeight: 'calc(100vh - 3rem)' }}>
                 <button
                   onClick={() => setIsCartOpen(false)}
                   className="absolute top-4 right-4 text-gray-600 hover:text-red-500 text-2xl"
@@ -636,7 +636,7 @@ function App() {
           `}</style>
 
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xl transition-opacity animate-fade-in">
-            <div className="relative bg-white/90 rounded-3xl shadow-3xl max-w-md w-full p-6 border border-white/40 transition-transform animate-modal-pop overflow-y-auto" style={{ maxHeight: '90vh' }}>
+            <div className="relative bg-white/90 rounded-3xl shadow-3xl max-w-md w-full p-6 border border-white/40 transition-transform animate-modal-pop overflow-y-auto mx-4 my-6 sm:mx-0" style={{ maxHeight: 'calc(100vh - 3rem)' }}>
               <button
                 onClick={handleCloseModal}
                 className="absolute z-50 top-2 right-2 text-gray-500 hover:text-red-500 transition-colors text-3xl bg-white/80 rounded-full p-1 shadow"

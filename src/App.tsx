@@ -1,5 +1,22 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ShoppingCart, X } from 'lucide-react';
+import styled, { keyframes } from 'styled-components';
+
+// Animation de l'icône panier
+const bounce = keyframes`
+  0% { transform: scale(1); }
+  25% { transform: scale(1.3) rotate(-10deg); }
+  50% { transform: scale(1.3) rotate(10deg); }
+  75% { transform: scale(1.3) rotate(-5deg); }
+  100% { transform: scale(1) rotate(0); }
+`;
+
+const CartIcon = styled(ShoppingCart)`
+  transition: transform 0.3s ease;
+  &.bounce {
+    animation: ${bounce} 0.5s ease;
+  }
+`;
 import maillotBlanc from './assets/maillot_blanc_brode.jpg';
 import maillotOrangeSimple from './assets/maillot_orange_pro_simple.jpg';
 import maillotOrangeMax from './assets/maillot_orange_pro_max.jpg';
@@ -65,10 +82,13 @@ function App() {
   const [selectedJersey, setSelectedJersey] = useState<Jersey | null>(null);
   const [formData, setFormData] = useState({
     name: '',
-    location: '',
     contact: '',
-    quantity: 1,
+    location: '',
+    quantity: 1
   });
+  
+  // État pour gérer l'animation du panier
+  const [isCartBouncing, setIsCartBouncing] = useState(false);
   // Panier : [{ jersey, quantity }], persistant localStorage
   const [cart, setCart] = useState<{ jersey: Jersey; quantity: number }[]>(() => {
     const saved = localStorage.getItem('cart');
@@ -80,39 +100,65 @@ function App() {
   const [successToast, setSuccessToast] = useState(false);
   const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   // Gestion erreurs formulaire
-  const [formErrors, setFormErrors] = useState<{ name?: string; location?: string; contact?: string }>({});
+  interface FormErrors {
+    name?: string;
+    location?: string;
+    contact?: string;
+    quantities?: string;
+  }
+  
+  const [formErrors, setFormErrors] = useState<FormErrors>({});
 
-  // Ajout d’un article au panier
+  // Ajout d'un article au panier
   const addToCart = (jersey: Jersey, quantity: number = 1) => {
-    setCart((prev) => {
-      const found = prev.find((item) => item.jersey.id === jersey.id);
+    // Validation de la quantité
+    if (quantity < 1) {
+      alert('La quantité doit être au moins de 1');
+      return;
+    }
+
+    // Animation du panier
+    setIsCartBouncing(true);
+    setTimeout(() => setIsCartBouncing(false), 500);
+
+    setCart(prev => {
+      const found = prev.find(item => item.jersey.id === jersey.id);
       if (found) {
-        return prev.map((item) =>
+        const newQuantity = found.quantity + quantity;
+        if (newQuantity < 1) {
+          alert('La quantité totale ne peut pas être inférieure à 1');
+          return prev;
+        }
+        return prev.map(item =>
           item.jersey.id === jersey.id
-            ? { ...item, quantity: item.quantity + quantity }
+            ? { ...item, quantity: newQuantity }
             : item
         );
       }
-      return [...prev, { jersey, quantity }];
+      return [...prev, { jersey, quantity: Math.max(1, quantity) }];
     });
   };
 
   // Retirer un article du panier
   const removeFromCart = (jerseyId: number) => {
-    setCart((prev) => prev.filter((item) => item.jersey.id !== jerseyId));
+    setCart(prev => prev.filter(item => item.jersey.id !== jerseyId));
   };
 
-  // Modifier la quantité d’un article
+  // Modifier la quantité d'un article
   const updateCartQuantity = (jerseyId: number, quantity: number) => {
-    setCart((prev) =>
-      prev.map((item) =>
+    if (quantity < 1) {
+      alert('La quantité doit être au moins de 1');
+      return;
+    }
+    
+    setCart(prev =>
+      prev.map(item =>
         item.jersey.id === jerseyId ? { ...item, quantity } : item
       )
     );
   };
 
   // Nombre total d’articles
-  const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   // Sauvegarde le panier à chaque changement
   useEffect(() => {
@@ -147,6 +193,14 @@ function App() {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedJersey(null);
+  };
+
+  
+  // Calcul du total du panier
+  const calculateCartTotal = () => {
+    return cart.reduce((total, item) => {
+      return total + (item.jersey.price * item.quantity);
+    }, 0);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -230,14 +284,13 @@ function App() {
 
           {/* Icône panier flottante */}
           <button
-            onClick={() => setIsCartOpen(true)}
-            className="fixed top-6 right-6 z-50 bg-white rounded-full shadow-xl p-4 flex items-center justify-center hover:bg-orange-50 transition-all border-2 border-orange-200"
-            style={{ minWidth: 56, minHeight: 56 }}
+            onClick={() => setIsCartOpen(!isCartOpen)}
+            className="fixed top-4 right-4 bg-white p-3 rounded-full shadow-lg z-50 hover:bg-gray-50 transition-colors"
           >
-            <ShoppingCart size={28} className="text-orange-600" />
-            {cartCount > 0 && (
-              <span className="absolute -top-2 -right-2 bg-gradient-to-r from-orange-500 to-green-500 text-white text-xs font-bold rounded-full px-2 py-0.5 border-2 border-white">
-                {cartCount}
+            <CartIcon className={`w-6 h-6 text-orange-500 ${isCartBouncing ? 'bounce' : ''}`} />
+            {cart.length > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                {cart.length}
               </span>
             )}
           </button>
@@ -292,7 +345,7 @@ function App() {
                     <div className="flex justify-between items-center pt-4 mt-4 border-t">
                       <span className="font-bold text-lg">Total :</span>
                       <span className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-green-600">
-                        {cart.reduce((sum, item) => sum + item.jersey.price * item.quantity, 0).toLocaleString()} FCFA
+                        {calculateCartTotal().toLocaleString()} FCFA
                       </span>
                     </div>
                     <button
@@ -400,7 +453,12 @@ function App() {
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto px-6 pb-4">
         <h3 className="text-2xl font-bold mb-4 text-center text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-green-600">Récapitulatif de la commande</h3>
-        <div className="space-y-4 mb-6">
+        {formErrors.quantities && (
+          <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg text-sm">
+            {formErrors.quantities}
+          </div>
+        )}
+        <div className="space-y-4 mb-6" data-error="quantities">
           {cart.map((item) => (
             <div key={item.jersey.id} className="flex items-center gap-4 border-b pb-2">
               <img src={item.jersey.image} alt={item.jersey.name} className="w-14 h-14 rounded-lg object-contain bg-gray-50 border" />
@@ -424,16 +482,42 @@ function App() {
         <form
           onSubmit={e => {
             e.preventDefault();
-            const errors: { name?: string; location?: string; contact?: string } = {};
-            if (!formData.name.trim()) errors.name = 'Veuillez renseigner votre nom complet.';
-            if (!formData.location.trim()) errors.location = 'Veuillez renseigner le lieu de livraison.';
-            if (!formData.contact.trim()) {
-              errors.contact = 'Veuillez renseigner un contact.';
-            } else if (!/^[0-9]{10}$/.test(formData.contact.trim())) {
-              errors.contact = 'Le numéro doit contenir exactement 10 chiffres.';
+            // Réinitialiser les erreurs
+            const formValidationErrors: FormErrors = {};
+            
+            // Vérifier les quantités
+            const invalidItems = cart.filter(item => !item.quantity || item.quantity < 1);
+            if (invalidItems.length > 0) {
+              formValidationErrors.quantities = invalidItems.length === 1 
+                ? 'Erreur : La quantité doit être d\'au moins 1 pour chaque article sélectionné.'
+                : `Erreur : Les quantités de ${invalidItems.length} articles sont invalides. Chaque article doit avoir une quantité d'au moins 1.`;
             }
-            setFormErrors(errors);
-            if (Object.keys(errors).length > 0) return;
+            
+            // Vérifier les autres champs du formulaire
+            if (!formData.name.trim()) {
+              formValidationErrors.name = 'Veuillez renseigner votre nom complet.';
+            }
+            
+            if (!formData.location.trim()) {
+              formValidationErrors.location = 'Veuillez renseigner le lieu de livraison.';
+            }
+            
+            if (!formData.contact.trim()) {
+              formValidationErrors.contact = 'Veuillez renseigner un contact.';
+            } else if (!/^[0-9]{10}$/.test(formData.contact.trim())) {
+              formValidationErrors.contact = 'Le numéro doit contenir exactement 10 chiffres.';
+            }
+            
+            // Mettre à jour les erreurs
+            setFormErrors(formValidationErrors);
+            if (Object.keys(formValidationErrors).length > 0) {
+              // Faire défiler jusqu'à la première erreur
+              const firstError = Object.keys(formValidationErrors)[0];
+              const errorElement = document.querySelector(`[data-error="${firstError}"]`);
+              errorElement?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              return;
+            }
+
             // Envoi au backend
             const commande = {
               name: formData.name.trim(),

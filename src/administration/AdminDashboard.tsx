@@ -20,7 +20,7 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     const token = localStorage.getItem('adminToken');
-    fetch('http://localhost:4000/commandes', {
+    fetch('https://site-maillot-backedn.onrender.com/commandes', {
       headers: { Authorization: `Bearer ${token}` }
     })
       .then(res => {
@@ -131,7 +131,7 @@ const AdminDashboard = () => {
                         onClick={async () => {
                           const token = localStorage.getItem('adminToken');
                           try {
-                            const res = await fetch(`http://localhost:4000/commandes/${cmd._id}/nonlivrer`, {
+                            const res = await fetch(`https://site-maillot-backedn.onrender.com/commandes/${cmd._id}/nonlivrer`, {
                               method: 'PATCH',
                               headers: { Authorization: `Bearer ${token}` }
                             });
@@ -151,7 +151,7 @@ const AdminDashboard = () => {
                         onClick={async () => {
                           const token = localStorage.getItem('adminToken');
                           try {
-                            const res = await fetch(`http://localhost:4000/commandes/${cmd._id}/livrer`, {
+                            const res = await fetch(`https://site-maillot-backedn.onrender.com/commandes/${cmd._id}/livrer`, {
                               method: 'PATCH',
                               headers: { Authorization: `Bearer ${token}` }
                             });
@@ -177,7 +177,7 @@ const AdminDashboard = () => {
                         }
                         const token = localStorage.getItem('adminToken');
                         try {
-                          const res = await fetch(`http://localhost:4000/commandes/${cmd._id}`, {
+                          const res = await fetch(`https://site-maillot-backedn.onrender.com/commandes/${cmd._id}`, {
                             method: 'DELETE',
                             headers: { Authorization: `Bearer ${token}` }
                           });

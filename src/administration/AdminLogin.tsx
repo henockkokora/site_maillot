@@ -10,7 +10,7 @@ const AdminLogin = ({ onSuccess }: { onSuccess: () => void }) => {
     e.preventDefault();
     setError('');
     try {
-      const res = await fetch('http://localhost:4000/admin/login', {
+      const res = await fetch('https://site-maillot-backedn.onrender.com/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
